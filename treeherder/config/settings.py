@@ -164,15 +164,25 @@ LOGGING = {
 CELERY_QUEUES = (
     Queue('default', Exchange('default'), routing_key='default'),
     # queue for failed jobs/logs
-    Queue('log_parser_fail', Exchange('default'), routing_key='parse_log.failures'),
+    Queue('log_parser_fail', Exchange('default'), routing_key='log_parser.failures'),
     # queue for successful jobs/logs
-    Queue('log_parser', Exchange('default'), routing_key='parse_log.success'),
+    Queue('log_parser', Exchange('default'), routing_key='log_parser.success'),
     # this is used to give priority to some logs, for example when we need to
     # parse a log on demand
-    Queue('log_parser_hp', Exchange('default'), routing_key='parse_log.high_priority'),
-    Queue('log_parser_json', Exchange('default'), routing_key='parse_log.json'),
-    Queue('store_error_summary', Exchange('default'), routing_key='store_error_summary'),
-    Queue('autoclassify', Exchange('default'), routing_key='autoclassify'),
+    Queue('log_parser_hp', Exchange('default'), routing_key='log_parser.high'),
+    Queue('log_parser_json', Exchange('default'), routing_key='log_parser_json.normal'),
+    Queue('log_parser_json_hp', Exchange('default'), routing_key='log_parser_json.high'),
+    Queue('log_after_parsed', Exchange('default'), routing_key='after_logs_parsed.normal'),
+    Queue('log_after_parsed_hp', Exchange('default'), routing_key='after_logs_parsed.high'),
+    Queue('log_store_error_summary', Exchange('default'), routing_key='store_error_summary.normal'),
+    Queue('log_store_error_summary_hp', Exchange('default'), routing_key='store_error_summary.high'),
+    Queue('log_crossreference_error_lines', Exchange('default'),
+          routing_key='crossreference_error_lines.normal'),
+    Queue('log_crossreference_error_lines_hp', Exchange('default'),
+          routing_key='crossreference_error_lines.high'),
+    Queue('log_autoclassify', Exchange('default'), routing_key='autoclassify.normal'),
+    Queue('log_autoclassify_hp', Exchange('default'), routing_key='autoclassify.high'),
+    Queue('log_parsing_complete', Exchange('default'), routing_key='log_parsing_complete'),
     Queue('detect_intermittents', Exchange('default'), routing_key='detect_intermittents'),
     # Queue for mirroring the failure classification activity to Elasticsearch.
     Queue('classification_mirroring', Exchange('default'), routing_key='classification_mirroring'),
@@ -469,7 +479,7 @@ if env.bool('IS_HEROKU', default=False):
         memcacheify().get('default')
     )
 
-CELERY_IGNORE_RESULT = True
+CELERY_RESULT_BACKEND = "cache+memcached://%s/" % (";".join(MEMCACHED_LOCATION),)
 
 API_HOSTNAME = SITE_URL
 
